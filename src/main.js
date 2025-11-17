@@ -7,8 +7,11 @@
 function calculateSimpleRevenue(purchase, _product) {
    // Расчет выручки от операции
     const { discount, sale_price, quantity } = purchase;
-    const revenue = sale_price * (1 - discount / 100) * quantity;
-    return Number(revenue.toFixed(2)); 
+    return sale_price * (1 - discount / 100) * quantity;
+}
+
+function calculateProfit(revenue, productItem) {
+    return revenue - productItem.purchase_price;
 }
 
 /**
@@ -31,18 +34,50 @@ function calculateBonusByProfit(index, total, seller) {
  */
 function analyzeSalesData(data, options) {
 
-    // Проверка входных данных
     if (!data) {
-        return null;
+        throw new Error("Отсутствует аргумент data");
     }
 
-    // Проверка наличия опций
     if (!options) {
-        return null;
+        throw new Error("Отсутствует аргумент options");
+    }
+
+    if (!Array.isArray(data.products) || data.products.length === 0) {
+        throw new Error("Требуется непустой массив products");
+    }
+
+    if (!Array.isArray(data.purchase_records) || data.purchase_records.length === 0) {
+        throw new Error("Требуется непустой массив purchase_records");
+    }
+
+    if (!Array.isArray(data.sellers) || data.sellers.length === 0) {
+        throw new Error("Требуется непустой массив sellers");
     }
 
     const { calculateRevenue, calculateBonus } = options;
+
+    if (typeof calculateRevenue !== 'function') {
+        throw new Error("calculateRevenue должна быть функцией!");
+    }
+
+    if (typeof calculateBonus !== 'function') {
+        throw new Error("calculateProfit должна быть функцией!");
+    }
+
     let result = [];
+
+    let groupedProducts = data.products.reduce((acc, product) => {
+        const sku = product.sku;
+        if (!acc[sku]){
+            acc[sku] = {
+                ...product
+            };
+            delete acc[sku].sku;
+        };
+        return acc;
+    },{});
+
+    console.log(groupedProducts);
 
     let groupedSales = data.purchase_records.reduce((acc, product) => {
         const seller_id = product.seller_id;
@@ -52,14 +87,20 @@ function analyzeSalesData(data, options) {
                 name: getName(data.sellers.find(seller => seller.id == seller_id)),
                 sales_count: 0,
                 revenue: 0,
+                profit: 0,
+                products_sold: {}
             };
         }
         acc[seller_id].sales_count++;
         product.items.forEach(purchase => {
-            acc[seller_id].revenue += calculateSimpleRevenue(purchase);
-        })
+            let revenue = calculateRevenue(purchase);
+            acc[seller_id].revenue += revenue;
+            acc[seller_id].profit += calculateProfit(revenue, groupedProducts[purchase.sku]);
+            acc[seller_id].products_sold[purchase.sku] = (acc[seller_id].products_sold[purchase.sku] || 0) + 1;
+        });
         return acc;
     }, {});
+
     console.log(groupedSales);
 
     // @TODO: Подготовка промежуточных данных для сбора статистики
