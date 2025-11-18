@@ -10,8 +10,8 @@ function calculateSimpleRevenue(purchase, _product) {
     return sale_price * (1 - discount / 100) * quantity;
 }
 
-function calculateProfit(revenue, productItem) {
-    return revenue - productItem.purchase_price;
+function calculateProfit(purchase, revenue, productItem) {
+    return revenue - productItem.purchase_price * purchase.quantity;
 }
 
 /**
@@ -99,9 +99,9 @@ function analyzeSalesData(data, options) {
             acc[seller_id] = {
                 seller_id: seller_id,
                 name: getName(data.sellers.find(seller => seller.id == seller_id)),
-                sales_count: 0,
                 revenue: 0,
                 profit: 0,
+                sales_count: 0,
                 products_sold: {}
             };
         }
@@ -109,7 +109,7 @@ function analyzeSalesData(data, options) {
         product.items.forEach(purchase => {
             let revenue = calculateRevenue(purchase);
             acc[seller_id].revenue += revenue;
-            acc[seller_id].profit += calculateProfit(revenue, groupedProducts[purchase.sku]);
+            acc[seller_id].profit += calculateProfit(purchase, revenue, groupedProducts[purchase.sku]);
             acc[seller_id].products_sold[purchase.sku] = (acc[seller_id].products_sold[purchase.sku] || 0) + 1;
         });
         return acc;
@@ -134,21 +134,21 @@ function analyzeSalesData(data, options) {
                 quantity: arr[1],
             };
         });
-        seller.profit = Number(seller.profit.toFixed(2));
-        seller.revenue = Number(seller.revenue.toFixed(2));
+        seller.profit = +seller.profit.toFixed(2);
+        seller.revenue = +seller.revenue.toFixed(2);
     });
     result.sort((a,b) => {
-        if (a.revenue > b.revenue) {
+        if (a.profit > b.profit) {
             return -1;
         }
-        if (a.revenue < b.revenue) {
+        if (a.profit < b.profit) {
             return 1;
         }
         return 0;
     });
     result.forEach((seller, index) => {
         seller.bonus = calculateBonusByProfit(index, result.length, seller);
-        seller.bonus = Number(seller.bonus.toFixed(2))
+        seller.bonus = +seller.bonus.toFixed(2)
         delete seller.products_sold;
     });
 
