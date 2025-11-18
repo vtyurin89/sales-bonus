@@ -149,6 +149,7 @@ function analyzeSalesData(data, options) {
     result.forEach((seller, index) => {
         seller.bonus = calculateBonusByProfit(index, result.length, seller);
         seller.bonus = Number(seller.bonus.toFixed(2))
+        delete seller.products_sold;
     });
 
     return result;
