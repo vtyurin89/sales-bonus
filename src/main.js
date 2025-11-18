@@ -119,13 +119,8 @@ function analyzeSalesData(data, options) {
     result.forEach((seller) => {
         seller.top_products = Object.entries(seller.products_sold)
         .sort((a,b) => {
-            if (a[1] > b[1]) {
-                return -1;
-            }
-            if (a[1] < b[1]) {
-                return 1;
-            }
-            return 0;
+            if (a[1] !== b[1]) return b[1] - a[1];
+            return a[0].localeCompare(b[0]);
         })
         .slice(0,10)
         .map(arr => {
@@ -134,8 +129,7 @@ function analyzeSalesData(data, options) {
                 quantity: arr[1],
             };
         });
-        seller.profit = +seller.profit.toFixed(2);
-        seller.revenue = +seller.revenue.toFixed(2);
+
     });
     result.sort((a,b) => {
         if (a.profit > b.profit) {
@@ -148,7 +142,9 @@ function analyzeSalesData(data, options) {
     });
     result.forEach((seller, index) => {
         seller.bonus = calculateBonusByProfit(index, result.length, seller);
-        seller.bonus = +seller.bonus.toFixed(2)
+        seller.bonus = +seller.bonus.toFixed(2);
+        seller.profit = +seller.profit.toFixed(2);
+        seller.revenue = +seller.revenue.toFixed(2);
         delete seller.products_sold;
     });
 
