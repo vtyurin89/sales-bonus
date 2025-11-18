@@ -93,8 +93,6 @@ function analyzeSalesData(data, options) {
         return acc;
     },{});
 
-    console.log(groupedProducts);
-
     let groupedSales = data.purchase_records.reduce((acc, product) => {
         const seller_id = product.seller_id;
         if (!acc[seller_id]){
@@ -132,8 +130,8 @@ function analyzeSalesData(data, options) {
         .slice(0,10)
         .map(arr => {
             return  {
-            sku: arr[0],
-            quantity: arr[1],
+                sku: arr[0],
+                quantity: arr[1],
             };
         });
         seller.profit = Number(seller.profit.toFixed(2));
@@ -153,7 +151,6 @@ function analyzeSalesData(data, options) {
         seller.bonus = Number(seller.bonus.toFixed(2))
     });
 
-    console.log(result);
     return result;
 }
 
