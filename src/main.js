@@ -22,8 +22,24 @@ function calculateProfit(revenue, productItem) {
  * @returns {number}
  */
 function calculateBonusByProfit(index, total, seller) {
-    // @TODO: Расчет бонуса от позиции в рейтинге
     const { profit } = seller;
+    const BONUS_RATES = {
+        FIRST_PLACE: 0.15,
+        TOP_THREE: 0.1,
+        STANDARD: 0.05,
+        LAST_PLACE: 0
+    };
+    let percent;
+    if (index == 0) {
+        percent = BONUS_RATES.FIRST_PLACE;
+    } else if ([1,2].includes(index)) {
+        percent = BONUS_RATES.TOP_THREE;
+    } else if (index == total - 1) {
+        percent = BONUS_RATES.LAST_PLACE;
+    } else {
+        percent = BONUS_RATES.STANDARD;
+    }
+    return profit * percent;
 }
 
 /**
@@ -101,19 +117,44 @@ function analyzeSalesData(data, options) {
         return acc;
     }, {});
 
-    console.log(groupedSales);
+    result = Object.values(groupedSales);
+    result.forEach((seller) => {
+        seller.top_products = Object.entries(seller.products_sold)
+        .sort((a,b) => {
+            if (a[1] > b[1]) {
+                return -1;
+            }
+            if (a[1] < b[1]) {
+                return 1;
+            }
+            return 0;
+        })
+        .slice(0,10)
+        .map(arr => {
+            return  {
+            sku: arr[0],
+            quantity: arr[1],
+            };
+        });
+        seller.profit = Number(seller.profit.toFixed(2));
+        seller.revenue = Number(seller.revenue.toFixed(2));
+    });
+    result.sort((a,b) => {
+        if (a.revenue > b.revenue) {
+            return -1;
+        }
+        if (a.revenue < b.revenue) {
+            return 1;
+        }
+        return 0;
+    });
+    result.forEach((seller, index) => {
+        seller.bonus = calculateBonusByProfit(index, result.length, seller);
+        seller.bonus = Number(seller.bonus.toFixed(2))
+    });
 
-    // @TODO: Подготовка промежуточных данных для сбора статистики
-
-    // @TODO: Индексация продавцов и товаров для быстрого доступа
-
-    // @TODO: Расчет выручки и прибыли для каждого продавца
-
-    // @TODO: Сортировка продавцов по прибыли
-
-    // @TODO: Назначение премий на основе ранжирования
-
-    // @TODO: Подготовка итоговой коллекции с нужными полями
+    console.log(result);
+    return result;
 }
 
 function getName (seller) {
