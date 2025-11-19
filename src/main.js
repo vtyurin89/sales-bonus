@@ -106,9 +106,10 @@ function analyzeSalesData(data, options) {
             };
         }
         acc[seller_id].sales_count++;
+        acc[seller_id].revenue += product.total_amount;
+
         product.items.forEach(purchase => {
             let revenue = calculateRevenue(purchase);
-            acc[seller_id].revenue += revenue;
             acc[seller_id].profit += calculateProfit(purchase, revenue, groupedProducts[purchase.sku]);
             acc[seller_id].products_sold[purchase.sku] = (acc[seller_id].products_sold[purchase.sku] || 0) + 1;
         });
