@@ -111,7 +111,7 @@ function analyzeSalesData(data, options) {
         product.items.forEach(purchase => {
             let revenue = calculateRevenue(purchase);
             acc[seller_id].profit += calculateProfit(purchase, revenue, groupedProducts[purchase.sku]);
-            acc[seller_id].products_sold[purchase.sku] = (acc[seller_id].products_sold[purchase.sku] || 0) + 1;
+            acc[seller_id].products_sold[purchase.sku] = (acc[seller_id].products_sold[purchase.sku] || 0) + purchase.quantity;
         });
         return acc;
     }, {});
